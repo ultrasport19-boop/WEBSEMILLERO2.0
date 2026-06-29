@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subir fotos — El Semillero</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+  :root{--bg:#0E1311;--card:#15211B;--ink:#F2F5F1;--muted:#9DB2A6;--line:rgba(255,255,255,.12);--green:#1BB36C;--green2:#52E0A0}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;line-height:1.6}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:34px;max-width:460px;width:100%}
+  .top{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+  .top img{width:52px;height:52px;border-radius:50%}
+  h1{font-size:1.4rem;font-weight:800}
+  p.sub{color:var(--muted);font-size:.92rem;margin-bottom:22px}
+  label{display:block;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--green2);margin:16px 0 7px}
+  select,input[type=file]{width:100%;background:#0E1311;border:1px solid var(--line);color:var(--ink);padding:12px 14px;border-radius:12px;font-size:.95rem}
+  button{width:100%;margin-top:22px;background:var(--green);color:#06120C;border:none;padding:14px;border-radius:999px;font-weight:700;font-size:1rem;cursor:pointer;transition:background .2s}
+  button:hover{background:var(--green2)}
+  button:disabled{opacity:.5;cursor:default}
+  .msg{margin-top:16px;font-size:.9rem;text-align:center;min-height:20px}
+  .ok{color:var(--green2)} .err{color:#ff8a8a}
+  .bar{height:8px;background:#0E1311;border-radius:999px;overflow:hidden;margin-top:16px;display:none}
+  .bar i{display:block;height:100%;width:0;background:var(--green);transition:width .3s}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="top"><img src="logo.png" alt=""><div><h1>Subir material</h1></div></div>
+    <p class="sub">Sube fotos o videos a la categoría correcta. Aparecerán solos en la página, con las caras centradas. 🌱</p>
+
+    <label for="cat">Categoría</label>
+    <select id="cat">
+      <option>Sub-6</option><option>Sub-8</option><option>Sub-10</option>
+      <option>Sub-12</option><option>Sub-14</option><option>Arqueros</option>
+    </select>
+
+    <label for="files">Fotos o videos</label>
+    <input id="files" type="file" accept="image/*,video/*" multiple>
+
+    <div class="bar" id="bar"><i id="bari"></i></div>
+    <button id="go">Subir</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+<script>
+// ¡IMPORTANTE! Pega aquí la MISMA URL /exec de tu App Web (la de index.html).
+const API = "https://script.google.com/macros/s/AKfycbxfxje0KtA8m5vXyyD0eo2m-UZECd7brnhnXjJiVaBZaDbuleHzyBz55NK_x1NW2p0/exec";
+function $(id){ return document.getElementById(id); }
+
+function leer(file){
+  return new Promise(function(res, rej){
+    const r = new FileReader();
+    r.onload = function(){ res(String(r.result).split(',')[1]); };
+    r.onerror = rej; r.readAsDataURL(file);
+  });
+}
+
+$('go').addEventListener('click', async function(){
+  const files = $('files').files;
+  if (!files.length){ $('msg').className = 'msg err'; $('msg').textContent = 'Elige al menos un archivo.'; return; }
+  const cat = $('cat').value;
+  $('go').disabled = true; $('bar').style.display = 'block';
+  $('msg').className = 'msg'; $('msg').textContent = 'Subiendo…';
+  let ok = 0;
+  for (let i = 0; i < files.length; i++){
+    try {
+      const datos = await leer(files[i]);
+      await fetch(API, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ categoria: cat, nombre: files[i].name, mime: files[i].type, datos: datos })
+      });
+      ok++;
+    } catch (e){ /* sigue con el resto */ }
+    $('bari').style.width = Math.round((i + 1) / files.length * 100) + '%';
+  }
+  $('msg').className = 'msg ok';
+  $('msg').textContent = '¡Listo! Se subieron ' + ok + ' de ' + files.length + ' archivo(s). Aparecerán en la página en unos minutos.';
+  $('go').disabled = false; $('files').value = '';
+  setTimeout(function(){ $('bar').style.display = 'none'; $('bari').style.width = '0'; }, 1500);
+});
+</script>
+</body>
+</html>
