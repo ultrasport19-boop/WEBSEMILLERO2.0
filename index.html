@@ -227,6 +227,36 @@ footer{border-top:1px solid var(--line);padding:46px 0 30px}
 .logro span{color:var(--muted);font-size:.9rem}
 .install-btn{display:none;position:fixed;right:18px;bottom:18px;z-index:500;background:var(--green);color:#06120C;border:none;border-radius:999px;padding:12px 18px;font-family:'Space Mono',monospace;font-weight:700;font-size:.78rem;cursor:pointer;box-shadow:0 8px 24px -8px rgba(0,0,0,.6);align-items:center;gap:8px}
 .install-btn:hover{background:var(--green-2)}
+/* ===== Ajustes para teléfonos ===== */
+@media(max-width:600px){
+  .wrap,.hdr-in,.hero-in{padding-left:16px;padding-right:16px}
+  .hdr-in{padding-top:10px;padding-bottom:10px}
+  .hdr .btn-wa{display:none} /* el hero ya tiene el botón de reserva */
+  .brand small{font-size:.6rem}
+  .logo{width:36px;height:36px}
+  .hero{min-height:90svh}
+  .hero-in{padding-bottom:46px}
+  .hero h1{font-size:clamp(2.3rem,11vw,3.6rem);max-width:13ch}
+  .hero .sub,.sub{font-size:.98rem;margin-top:16px}
+  .kick{margin-bottom:12px}
+  .acts{margin-top:22px;flex-direction:column;align-items:stretch;gap:10px}
+  .acts .btn{width:100%;justify-content:center;padding:15px 20px}
+  .cats,.info2,.logros{padding:40px 0}
+  .gh{margin-bottom:16px}
+  .gh h2{font-size:1.55rem}
+  .wall{grid-auto-rows:122px;gap:8px}
+  .tile{border-radius:12px}
+  .tile::after{width:26px;height:26px;right:6px;bottom:6px;opacity:.5}
+  .tools{gap:8px}
+  .search,.sortsel{flex:1 1 100%;width:100%}
+  .catcard{padding:18px}
+  .htab th,.htab td{padding:10px 11px;font-size:.85rem}
+  .lb-stage{padding:0 6px 8px}
+  .lb-nav{width:40px;height:40px}
+  #lbmedia::after{width:46px;height:46px;right:10px;bottom:10px}
+  .install-btn{right:12px;bottom:12px;padding:10px 14px;font-size:.72rem}
+  .foot{gap:16px}
+}
 </style>
 </head>
 <body>
@@ -506,6 +536,24 @@ window.__semillero=buildGallery;
   var deferred=null, ib=document.getElementById("installBtn");
   addEventListener("beforeinstallprompt",function(e){ e.preventDefault(); deferred=e; if(ib) ib.style.display="inline-flex"; });
   if(ib) ib.addEventListener("click",function(){ if(deferred){ deferred.prompt(); deferred=null; ib.style.display="none"; } });
+  // Auto-actualizacion: re-consulta Drive cada 2 min sin recargar la pagina
+  var _bg = window.__semillero;
+  window.__semillero = function(items){
+    _bg(items);
+    var chips = document.querySelectorAll("#chips .chip");
+    chips.forEach(function(c){ c.classList.toggle("active", c.dataset.f===FILTER); });
+  };
+  function refrescar(){
+    if (document.hidden) return;
+    var lbx = document.getElementById("lb");
+    if (lbx && lbx.classList.contains("on")) return;
+    var s = document.createElement("script");
+    s.src = API + (API.indexOf("?")<0?"?":"&") + "callback=__semillero&t=" + Date.now();
+    s.onload = function(){ s.remove(); };
+    s.onerror = function(){ s.remove(); };
+    document.body.appendChild(s);
+  }
+  setInterval(refrescar, 120000);
 })();
 </script>
 </body>
